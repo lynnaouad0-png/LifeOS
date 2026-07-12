@@ -11,11 +11,8 @@ COLLECTION_NAME = "user_memories"
 class MemoryService:
     def __init__(self):
         """Initialize connection to Qdrant vector storage and load multilingual E5 via ONNX."""
-        # Initialize Qdrant Client
-        # PRO TIP: If Docker isn't running, swap to self.qdrant_client = QdrantClient(location=":memory:")
         self.qdrant_client = QdrantClient(url=QDRANT_URL)
         
-        # Swapped to a fully supported 1024-dimension flagship multilingual model
         print("🔄 Loading Multilingual-E5-Large text embedding weights via FastEmbed...")
         self.encoder = TextEmbedding(model_name="intfloat/multilingual-e5-large")
         
@@ -26,7 +23,6 @@ class MemoryService:
         """Verifies collection exists with E5-Large dimensions (1024), or auto-creates it."""
         try:
             if not self.qdrant_client.collection_exists(collection_name=COLLECTION_NAME):
-                # Multilingual-E5-Large outputs a 1024-dimensional dense vector configuration
                 self.qdrant_client.create_collection(
                     collection_name=COLLECTION_NAME,
                     vectors_config=VectorParams(size=1024, distance=Distance.COSINE)
@@ -37,8 +33,6 @@ class MemoryService:
 
     def create_memory_embedding(self, text: str) -> list:
         """Generates a dense vector embedding using FastEmbed for semantic vector queries."""
-        # E5 models perform best when retrieval text is prefixed with "query: " or "passage: "
-        # FastEmbed handles standard formatting, but adding "passage: " optimizes storage context
         formatted_text = f"passage: {text}"
         embeddings_generator = self.encoder.embed([formatted_text])
         embedding = next(embeddings_generator)
@@ -75,7 +69,6 @@ class MemoryService:
 
     def retrieve_relevant_memories(self, user_id: str, query: str, limit: int = 3) -> list:
         """Performs vector similarity lookup to retrieve context-relevant memory logs."""
-        # For searching, we prefix the search text with "query: " to maximize E5 model accuracy
         query_vector = self.create_memory_embedding(f"query: {query}")
         
         user_isolation_filter = Filter(
@@ -87,12 +80,13 @@ class MemoryService:
             ]
         )
         
-        search_results = self.qdrant_client.search(
+        # FIX: Swapped out deprecated .search() for the modern .query_points() API endpoint
+        search_results = self.qdrant_client.query_points(
             collection_name=COLLECTION_NAME,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=user_isolation_filter,
             limit=limit
-        )
+        ).points
         
         extracted_memories = []
         for point in search_results:
@@ -116,11 +110,6 @@ if __name__ == "__main__":
         user_id=test_user,
         content="User prefers code deep-dives late in the morning and playing classical violin pieces (Bach, Sibelius) to wind down in the evening.",
         source_category="reflection"
-    )
-    memory_engine.save_memory(
-        user_id=test_user,
-        content="User tracks professional milestones on LinkedIn and holds a certified Pix credential id portfolio.",
-        source_category="metadata"
     )
     
     search_prompt = "What musical instruments or composers do I resonate with?"
