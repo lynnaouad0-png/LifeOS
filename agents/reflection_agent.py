@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Ensure the root LifeOS directory is on the system path for clean cross-module imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,7 +24,8 @@ class ReflectionAgent:
         Gathers nightly check-in logs, structures them into a comprehensive daily narrative, 
         and updates the Qdrant long-term vector brain index.
         """
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+        # Fixed the deprecation warning using a modern, timezone-aware UTC datetime object
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
         print(f"\n🌙 Processing Evening Review Log for timestamp: {timestamp}")
         
         # 1. Compile the narrative baseline
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     mock_user = "b2156f03-4753-484e-abad-ced4371ebfb5"
     
     # Simulating authentic lifestyle tracking inputs
-    user_accomplishments = "Completed the microeconomics curriculum review phase and pushed the AI Orchestrator backend to GitHub."
+    user_accomplishments = "Idled microeconomics curriculum review phase and pushed AI Orchestrator backend to GitHub."
     user_distractions = "Spent too much time adjusting styling options in PyCharm before starting deep-work modules."
     user_improvements = "Will block all notification profiles and initialize the Python code deep-dive by 9:00 AM sharp."
     
