@@ -9,26 +9,35 @@ class AnalyticsDashboard:
     def generate_weekly_report(self, data: dict) -> str:
         """
         Processes raw metric dictionaries and generates a visual performance dashboard.
-        Expected keys: study_hours, coding_hours, sleep_hours, habit_completion, 
-        goal_completion_rate, focus_score.
+        Expected keys: study, coding, sleep, habits, goal_rate, focus_score, focus_time.
         """
         # Calculate summary statistics
-        total_focus = sum(data.get("focus_time", []))
-        avg_sleep = sum(data.get("sleep", [])) / len(data.get("sleep", [1]))
+        total_study = sum(data.get("study", []))
+        total_coding = sum(data.get("coding", []))
         
+        # Avoid division by zero by providing defaults if lists are empty
+        sleep_data = data.get("sleep", [0])
+        avg_sleep = sum(sleep_data) / len(sleep_data) if sleep_data else 0
+        
+        habit_data = data.get("habits", [0])
+        avg_habit = round(sum(habit_data) / len(habit_data), 1) if habit_data else 0
+        
+        focus_scores = data.get("focus_score", [0])
+        avg_focus = round(sum(focus_scores) / len(focus_scores), 1) if focus_scores else 0
+
         report = []
         report.append("=== LIFEOS WEEKLY ANALYTICS DASHBOARD ===")
         report.append(f"📅 Reporting Period: Last 7 Days\n")
         
         report.append("📈 Productivity Metrics:")
-        report.append(f"  • Study Hours: {sum(data.get('study', []))} hrs")
-        report.append(f"  • Coding Hours: {sum(data.get('coding', []))} hrs")
-        report.append(f"  • Average Focus Score: {round(sum(data.get('focus_score', []))/7, 1)}/10")
+        report.append(f"  • Study Hours: {total_study} hrs")
+        report.append(f"  • Coding Hours: {total_coding} hrs")
+        report.append(f"  • Average Focus Score: {avg_focus}/10")
         report.append("")
         
         report.append("🔋 Wellness & Habits:")
         report.append(f"  • Average Sleep: {round(avg_sleep, 1)} hrs/night")
-        report.append(f"  • Habit Completion Rate: {sum(data.get('habits', []))}%")
+        report.append(f"  • Habit Completion Rate: {avg_habit}%")
         report.append("")
         
         report.append("🎯 Objective Alignment:")
@@ -38,7 +47,7 @@ class AnalyticsDashboard:
         report.append("💡 Insights:")
         if avg_sleep < 7:
             report.append("  ⚠️ Sleep deficit detected. Impacting recovery metrics.")
-        if sum(data.get('coding', [])) > sum(data.get('study', [])):
+        if total_coding > total_study:
             report.append("  🚀 Coding velocity is currently outpacing theoretical study.")
             
         report.append("==========================================")
