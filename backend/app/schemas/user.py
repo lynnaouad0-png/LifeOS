@@ -1,0 +1,18 @@
+from pydantic import BaseModel, EmailStr, ConfigDict
+from uuid import UUID
+from datetime import datetime
+from typing import Optional
+
+class UserBase(BaseModel):
+    name: str
+    email: EmailStr
+    timezone: Optional[str] = "UTC"
+
+class UserCreate(UserBase):
+    pass
+
+class UserResponse(UserBase):
+    id: UUID
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
