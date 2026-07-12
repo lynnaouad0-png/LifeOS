@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # --- YOUR EXISTING SERVICES ---
   postgres:
     image: postgres:15-alpine
     container_name: lifeos_postgres
@@ -23,6 +24,21 @@ services:
     volumes:
       - qdrant_storage:/qdrant/storage
     restart: unless-stopped
+
+  # --- NEW: ADD THIS SERVICE ---
+  lifeos_app:
+    build: .
+    container_name: lifeos_app
+    depends_on:
+      - postgres
+      - qdrant
+    environment:
+      DATABASE_URL: "postgresql://lifeos_developer:my_local_secure_password_123@postgres:5432/lifeos_core_db"
+      QDRANT_URL: "http://qdrant:6333"
+    volumes:
+      - .:/app
+    tty: true
+    stdin_open: true
 
 volumes:
   postgres_storage:
